@@ -6,6 +6,7 @@ using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace MediaCrusher
 {
@@ -50,7 +51,13 @@ namespace MediaCrusher
                 {
                     var comment = message as Comment;
                     if (comment == null)
+                    {
+                        if (message is PrivateMessage)
+                            (message as PrivateMessage).SetAsRead();
                         continue;
+                    }
+                    comment.SetAsRead();
+                    Console.WriteLine("Handling {0}", comment.FullName);
                     var post = Reddit.GetThingByFullname(comment.ParentId) as Post;
                     if (post.Domain == "mediacru.sh")
                         comment.Reply("This post is already on mediacru.sh, silly!");
@@ -64,15 +71,18 @@ namespace MediaCrusher
                             if (!SupportedContentTypes.Any(c => c == response.ContentType))
                             {
                                 comment.Reply("This post isn't a supported media type. :(");
+                                response.Close();
                                 return;
                             }
                             else if (response.StatusCode != HttpStatusCode.OK)
                             {
                                 comment.Reply("There was an error fetching this file. :(");
+                                response.Close();
                                 return;
                             }
                             else
                             {
+                                response.Close();
                                 // Let's do this
                                 var client = new WebClient();
                                 var file = client.DownloadData(post.Url);
@@ -87,8 +97,20 @@ namespace MediaCrusher
                                 }
                                 catch (WebException e)
                                 {
-                                    comment.Reply("MediaCrush didn't like this for some reason. Sorry :(");
-                                    return;
+                                    try
+                                    {
+                                        response = e.Response as HttpWebResponse;
+                                        if (response.StatusCode != HttpStatusCode.Conflict)
+                                        {
+                                            comment.Reply("MediaCrush didn't like this for some reason. Sorry :(");
+                                            return;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        comment.Reply("MediaCrush didn't like this for some reason. Sorry :(");
+                                        return;
+                                    }
                                 }
                                 string hash;
                                 using (var stream = new StreamReader(response.GetResponseStream()))
@@ -101,20 +123,35 @@ namespace MediaCrusher
                                     string text;
                                     using (var stream = new StreamReader(response.GetResponseStream()))
                                         text = stream.ReadToEnd();
-                                    if (text == "done")
+                                    response.Close();
+                                    try
                                     {
-                                        comment.Reply("Done! https://mediacru.sh/" + hash);
-                                        return;
+                                        if (text == "done")
+                                        {
+                                            request = (HttpWebRequest)WebRequest.Create("https://mediacru.sh/" + hash + ".json");
+                                            request.Method = "GET";
+                                            response = request.GetResponse() as HttpWebResponse;
+                                            var json = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                                            response.Close();
+                                            var compression = (int)(json["compression"].Value<double>() * 100);
+                                            comment.Reply(string.Format("Done! It's **{0}%** faster now. https://mediacru.sh/{1}", compression, hash));
+                                            Console.WriteLine("https://mediacru.sh/" + hash);
+                                            return;
+                                        }
+                                        else if (text == "timeout")
+                                        {
+                                            comment.Reply("This took too long for us to process :(");
+                                            return;
+                                        }
+                                        else if (text == "error")
+                                        {
+                                            comment.Reply("Something went wrong :(");
+                                            return;
+                                        }
                                     }
-                                    else if (text == "timeout")
+                                    catch (RateLimitException e)
                                     {
-                                        comment.Reply("This took too long for us to process :(");
-                                        return;
-                                    }
-                                    else if (text == "error")
-                                    {
-                                        comment.Reply("Something went wrong :(");
-                                        return;
+                                        Thread.Sleep(e.TimeToReset);
                                     }
                                 }
                             }
