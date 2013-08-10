@@ -59,7 +59,7 @@ namespace MediaCrusher
                     }
                     comment.SetAsRead();
                     Console.WriteLine("Handling {0}", comment.FullName);
-                    var post = Reddit.GetThingByFullname(comment.ParentId) as Post;
+                    var post = Reddit.GetThingByFullname("t3_" + comment.LinkId) as Post;
                     if (post.Domain == "mediacru.sh")
                         comment.Reply("This post is already on mediacru.sh, silly!");
                     else
