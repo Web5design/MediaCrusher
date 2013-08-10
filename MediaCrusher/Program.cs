@@ -14,22 +14,23 @@ namespace MediaCrusher
     {
         readonly static string[] SupportedContentTypes = new[] { "image/jpg", "image/jpeg", "image/png", "image/svg", "image/gif", "video/mp4", "video/ogv", "audio/mp3" };
 
+        public static Configuration Config { get; set; }
         public static Reddit Reddit { get; set; }
         public static Timer Timer { get; set; }
 
         public static int Main(string[] args)
         {
-            var config = new Configuration();
+            Config = new Configuration();
             if (File.Exists("config.json"))
-                config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText("config.json"));
+                Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText("config.json"));
             else
             {
-                File.WriteAllText("config.json", JsonConvert.SerializeObject(config, Formatting.Indented));
+                File.WriteAllText("config.json", JsonConvert.SerializeObject(Config, Formatting.Indented));
                 Console.WriteLine("Saved empty configuration in config.json, populate it and restart.");
                 return 1;
             }
             Reddit = new Reddit();
-            Reddit.LogIn(config.Username, config.Password);
+            Reddit.LogIn(Config.Username, Config.Password);
 
             Timer = new Timer(o => DoUpdate(), null, 0, 30000);
 
@@ -133,8 +134,18 @@ namespace MediaCrusher
                                             response = request.GetResponse() as HttpWebResponse;
                                             var json = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
                                             response.Close();
+                                            var compliment = GetCompliment();
                                             var compression = (int)(json["compression"].Value<double>() * 100);
-                                            comment.Reply(string.Format("Done! It's **{0}%** faster now. https://mediacru.sh/{1}", compression, hash));
+                                            if (compression >= 100)
+                                            {
+                                                comment.Reply(string.Format("Done! It loads **{0}% faster** now. https://mediacru.sh/{1}\n\n*{2}* " +
+                                                    "^^[faq](https://gist.github.com/SirCmpwn/eef8f3c428e68f824197)", compression, hash, compliment));
+                                            }
+                                            else
+                                            {
+                                                comment.Reply(string.Format("Done! https://mediacru.sh/{0}\n\n*{1}* " +
+                                                    "^^[faq](https://gist.github.com/SirCmpwn/eef8f3c428e68f824197)", hash, compliment));
+                                            }
                                             Console.WriteLine("https://mediacru.sh/" + hash);
                                             return;
                                         }
@@ -151,6 +162,7 @@ namespace MediaCrusher
                                     }
                                     catch (RateLimitException e)
                                     {
+                                        Console.WriteLine("Rate limited - waiting {0} minutes", e.TimeToReset.TotalMinutes);
                                         Thread.Sleep(e.TimeToReset);
                                     }
                                 }
@@ -166,6 +178,12 @@ namespace MediaCrusher
                 Console.WriteLine(e.ToString());
             }
             Timer.Change(30000, Timeout.Infinite);
+        }
+
+        static Random Random = new Random();
+        public static string GetCompliment()
+        {
+            return Config.Compliments[Random.Next(Config.Compliments.Length)];
         }
     }
 }
