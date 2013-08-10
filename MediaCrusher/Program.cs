@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.IO;
 using Newtonsoft.Json;
@@ -66,9 +67,15 @@ namespace MediaCrusher
                         comment.Reply("This post is already on mediacru.sh, silly!");
                     else
                     {
+                        var uri = new Uri(post.Url);
+                        if (uri.Host == "imgur.com" && !uri.LocalPath.StartsWith("/a/"))
+                        {
+                            // Swap out for i.imgur.com
+                            uri = new Uri("http://i.imgur.com/" + uri.LocalPath + ".png"); // Note: extension doesn't need to be correct
+                        }
                         var task = Task.Factory.StartNew(() =>
                         {
-                            var request = (HttpWebRequest)WebRequest.Create(post.Url);
+                            var request = (HttpWebRequest)WebRequest.Create(uri);
                             request.Method = "HEAD";
                             var response = request.GetResponse() as HttpWebResponse;
                             if (!SupportedContentTypes.Any(c => c == response.ContentType))
@@ -88,11 +95,12 @@ namespace MediaCrusher
                                 response.Close();
                                 // Let's do this
                                 var client = new WebClient();
-                                var file = client.DownloadData(post.Url);
+                                var file = client.DownloadData(uri);
                                 request = (HttpWebRequest)WebRequest.Create("https://mediacru.sh/upload/");
                                 request.Method = "POST";
                                 var builder = new MultipartFormBuilder(request);
-                                builder.AddFile("file", "foobar" + Path.GetExtension(new Uri(post.Url).LocalPath), file, response.ContentType);
+                                var ext = response.ContentType.Split('/')[1];
+                                builder.AddFile("file", "foobar." + ext, file, response.ContentType);
                                 builder.Finish();
                                 try
                                 {
