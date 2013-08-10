@@ -141,12 +141,14 @@ namespace MediaCrusher
                                             if (compression >= 100)
                                             {
                                                 comment.Reply(string.Format("Done! It loads **{0}% faster** now. https://mediacru.sh/{1}\n\n*{2}* " +
-                                                    "^^[faq](http://www.reddit.com/r/MediaCrush/wiki/mediacrusher)", compression, hash, compliment));
+                                                    "^^[faq](http://www.reddit.com/r/MediaCrush/wiki/mediacrusher) " +
+                                                    "^^- ^^[upload](https://mediacru.sh)", compression, hash, compliment));
                                             }
                                             else
                                             {
                                                 comment.Reply(string.Format("Done! https://mediacru.sh/{0}\n\n*{1}* " +
-                                                    "^^[faq](http://www.reddit.com/r/MediaCrush/wiki/mediacrusher)", hash, compliment));
+                                                    "^^[faq](http://www.reddit.com/r/MediaCrush/wiki/mediacrusher) " +
+                                                    "^^- ^^[upload](https://mediacru.sh)", hash, compliment));
                                             }
                                             Console.WriteLine("https://mediacru.sh/" + hash);
                                             return;
