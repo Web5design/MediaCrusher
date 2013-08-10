@@ -58,6 +58,8 @@ namespace MediaCrusher
                         continue;
                     }
                     comment.SetAsRead();
+                    if (!comment.Body.Contains("/u/MediaCrusher"))
+                        continue;
                     Console.WriteLine("Handling {0}", comment.FullName);
                     var post = Reddit.GetThingByFullname("t3_" + comment.LinkId) as Post;
                     if (post.Domain == "mediacru.sh")
@@ -139,12 +141,12 @@ namespace MediaCrusher
                                             if (compression >= 100)
                                             {
                                                 comment.Reply(string.Format("Done! It loads **{0}% faster** now. https://mediacru.sh/{1}\n\n*{2}* " +
-                                                    "^^[faq](https://gist.github.com/SirCmpwn/eef8f3c428e68f824197)", compression, hash, compliment));
+                                                    "^^[faq](http://www.reddit.com/r/MediaCrush/wiki/mediacrusher)", compression, hash, compliment));
                                             }
                                             else
                                             {
                                                 comment.Reply(string.Format("Done! https://mediacru.sh/{0}\n\n*{1}* " +
-                                                    "^^[faq](https://gist.github.com/SirCmpwn/eef8f3c428e68f824197)", hash, compliment));
+                                                    "^^[faq](http://www.reddit.com/r/MediaCrush/wiki/mediacrusher)", hash, compliment));
                                             }
                                             Console.WriteLine("https://mediacru.sh/" + hash);
                                             return;
