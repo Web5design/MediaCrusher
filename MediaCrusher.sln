@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaCrusher", "MediaCrusher\MediaCrusher.csproj", "{1F007E72-5E95-471A-A4D7-09CC910B9EBA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedditSharp", "externals\RedditSharp\RedditSharp\RedditSharp.csproj", "{A368CB75-75F0-4489-904D-B5CEBB0FE624}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,6 +15,10 @@ Global
 		{1F007E72-5E95-471A-A4D7-09CC910B9EBA}.Debug|x86.Build.0 = Debug|x86
 		{1F007E72-5E95-471A-A4D7-09CC910B9EBA}.Release|x86.ActiveCfg = Release|x86
 		{1F007E72-5E95-471A-A4D7-09CC910B9EBA}.Release|x86.Build.0 = Release|x86
+		{A368CB75-75F0-4489-904D-B5CEBB0FE624}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A368CB75-75F0-4489-904D-B5CEBB0FE624}.Debug|x86.Build.0 = Debug|Any CPU
+		{A368CB75-75F0-4489-904D-B5CEBB0FE624}.Release|x86.ActiveCfg = Release|Any CPU
+		{A368CB75-75F0-4489-904D-B5CEBB0FE624}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = MediaCrusher\MediaCrusher.csproj
